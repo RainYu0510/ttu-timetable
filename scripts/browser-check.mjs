@@ -6,12 +6,13 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const browser=await chromium.launch({channel:'chrome',headless:true});
 await mkdir('test-output',{recursive:true});
 const page=await browser.newPage({viewport:{width:1440,height:1100},acceptDownloads:true});
+const testURL=process.env.TEST_URL||'http://127.0.0.1:5173/';
 const errors=[], requests=[];
 page.on('pageerror',e=>errors.push(e.message));
 page.on('request',r=>{requests.push({url:r.url(),method:r.method(),hasBody:!!r.postData()});});
 page.on('console',m=>{if(m.type()==='error')console.log('BROWSER_ERROR',m.text());});
 try {
-  const res=await page.goto('http://127.0.0.1:5173/');assert.equal(res.status(),200);
+  const res=await page.goto(testURL);assert.equal(res.status(),200);
   await page.evaluate(()=>document.fonts.ready);
   await page.screenshot({path:'test-output/desktop.png',fullPage:true});
   await page.locator('input[type=file]').setInputFiles({name:'invalid.txt',mimeType:'text/plain',buffer:Buffer.from('not a PDF')});
@@ -24,7 +25,7 @@ try {
   await page.locator('input[type=file]').setInputFiles({name:'blank.pdf',mimeType:'application/pdf',buffer:Buffer.from(blank)});
   await page.getByText('1 頁・已略過 1 個空白頁').waitFor();
   assert.ok(await page.getByRole('button',{name:'開始辨識課表'}).isDisabled());
-  await page.goto('http://127.0.0.1:5173/');
+  await page.goto(testURL);
   await page.getByRole('button',{name:'使用說明'}).click();await page.getByRole('button',{name:'了解，開始安排'}).click();
   await page.getByRole('button',{name:'先用示範課表試試'}).click();
   await page.getByRole('button',{name:'課程清單',exact:true}).click();assert.equal(await page.locator('.course-row').count(),6);
@@ -46,7 +47,7 @@ try {
   const download=await dl;await download.saveAs('test-output/demo.ics');
   await page.getByRole('heading',{name:'課表就位，出發吧！'}).waitFor();
   await page.screenshot({path:'test-output/download.png',fullPage:true});
-  await page.setViewportSize({width:390,height:844});await page.goto('http://127.0.0.1:5173/');
+  await page.setViewportSize({width:390,height:844});await page.goto(testURL);
   await page.screenshot({path:'test-output/mobile.png',fullPage:true});
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth));
   await page.getByRole('button',{name:'先用示範課表試試'}).click();
@@ -55,7 +56,7 @@ try {
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth));
   console.log('PASS: demo, CRUD, split, date settings, download, mobile layout.');
   if(process.env.TEST_PDF) {
-    await page.setViewportSize({width:1440,height:1100});await page.goto('http://127.0.0.1:5173/');
+    await page.setViewportSize({width:1440,height:1100});await page.goto(testURL);
     await page.locator('input[type=file]').setInputFiles(process.env.TEST_PDF);
     await page.getByText('2 頁・已略過 0 個空白頁').waitFor({timeout:30000});
     console.log('PASS: both real PDF pages retained, including continuation page.');

@@ -58,3 +58,29 @@ npm run preview
 圖片文字辨識會保留原始文字，並將常見代碼誤讀與教室破折號差異用於連堂比對；合併後仍須逐筆核對，不將 OCR 猜測當成已確認資料。
 
 學生作業作品，非大同大學官方服務。
+
+
+## GitHub 與公開網站
+
+- 原始碼：https://github.com/RainYu0510/ttu-timetable
+- GitHub Pages：https://rainyu0510.github.io/ttu-timetable/
+
+### 自動部署
+
+推送到 main 分支後，GitHub Actions 會依序安裝套件、執行測試、準備 OCR 引擎與中英文模型、編譯並發布網站。部署狀態可在儲存庫的 Actions 頁查看。Pages 的發布來源設定為 GitHub Actions。
+
+部署時會依 Pages 的 base_path 設定網站路徑，OCR 模型、圖示及程式檔皆可在儲存庫子路徑載入。本機開發仍使用根路徑。
+
+### 更新網站（PowerShell）
+
+```powershell
+cd "D:\NCCU_AI_Lecture\Week5\ttu-timetable"
+git status
+git add src public scripts tests index.html package.json package-lock.json tsconfig.json vite.config.mjs README.md .gitignore .github
+git commit -m "Update timetable website"
+git push origin main
+```
+
+若有新增檔案，先檢查 git status，僅加入預計公開的專案內容。原始個人 PDF、測試輸出、登入憑證及 node_modules 不納入儲存庫；網站建置時自動準備 OCR 資源。
+
+技術參考：[Vite 靜態部署](https://vite.dev/guide/static-deploy.html#github-pages)、[GitHub Pages 自訂工作流程](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)。

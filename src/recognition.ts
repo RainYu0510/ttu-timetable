@@ -84,7 +84,8 @@ export async function recognizePDF(doc:pdfjs.PDFDocumentProxy,pageNumber:number,
     const grid=detectGrid(canvas.getContext('2d')!.getImageData(0,0,canvas.width,canvas.height));
     onProgress(5,'正在載入中英文辨識模型，首次使用需要一些時間…');
     // Model assets only. The PDF and its pixels never leave this browser.
-    const pending=createWorker(['chi_tra','eng'],1,{workerPath:'/ocr/worker.min.js',corePath:'/ocr/core',langPath:'/ocr/lang',logger:()=>{}});
+    const baseURL=new URL(import.meta.env.BASE_URL,window.location.origin);
+    const pending=createWorker(['chi_tra','eng'],1,{workerPath:new URL('ocr/worker.min.js',baseURL).href,corePath:new URL('ocr/core',baseURL).href,langPath:new URL('ocr/lang',baseURL).href,logger:()=>{}});
     worker=await pending;
     if(signal.aborted)throw new Error('已取消辨識。');
     const jobs:{row:number;day:number;canvas:HTMLCanvasElement}[]=[];

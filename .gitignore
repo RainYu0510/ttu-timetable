@@ -5,3 +5,10 @@ dist/
 test-output/
 public/ocr/
 *.tsbuildinfo
+
+# Local secrets, personal documents and temporary files
+.env
+.env.*
+!.env.example
+*.pdf
+tmp/
