@@ -6,7 +6,6 @@ export interface Course {
   startTime: string;
   endTime: string;
   location: string;
-  needsReview: boolean;
   startRow?: number;
   endRow?: number;
   rawText?: string;
@@ -39,9 +38,8 @@ export function mergeCells(courses: Course[]): Course[] {
     const sameCode=prev&&normalized(prev.courseCode)===normalized(c.courseCode);
     const sameName=prev&&normalized(prev.courseName)===normalized(c.courseName);
     if(prev && prev.weekday===c.weekday && prev.endRow!==undefined && c.startRow===prev.endRow+1 && sameCode && sameName && normalized(prev.location)===normalized(c.location) && !!prev.courseName.trim() && validTime(prev.startTime) && validTime(c.endTime)) {
-      prev.endRow = c.endRow; prev.endTime = c.endTime; prev.needsReview ||= c.needsReview;
+      prev.endRow = c.endRow; prev.endTime = c.endTime;
       prev.rawText = `${prev.rawText??''}\n${c.rawText??''}`;
-      if(prev.courseName!==c.courseName||prev.courseCode!==c.courseCode||prev.location!==c.location)prev.needsReview=true;
     } else result.push({...c});
   });
   return result;
@@ -60,5 +58,5 @@ export function demoCourses(): Course[] {
     ['程式設計','DEMO01',4,'13:10','15:00','教學大樓 201'],
     ['大學英文','DEMO04',5,'10:10','12:00','語言教室 102'],
     ['數位攝影','DEMO05',2,'16:10','19:10','攝影教室 101'],
-  ].map(([courseName,courseCode,weekday,startTime,endTime,location]) => ({id:uid(),courseName:String(courseName),courseCode:String(courseCode),weekday:Number(weekday),startTime:String(startTime),endTime:String(endTime),location:String(location),needsReview:false}));
+  ].map(([courseName,courseCode,weekday,startTime,endTime,location]) => ({id:uid(),courseName:String(courseName),courseCode:String(courseCode),weekday:Number(weekday),startTime:String(startTime),endTime:String(endTime),location:String(location)}));
 }

@@ -105,7 +105,7 @@ export function parseTimetableHTML(html:string):HTMLTimetable {
       const courseCode=/^[A-Z]\d{3,6}[A-Z0-9]*$/i.test(pieces[0])?pieces.shift()!:'';
       const courseName=pieces.shift()??'';
       const room=pieces.join(' ');
-      courses.push({id:uid(),courseName,courseCode,weekday:d.day,startTime:times[0],endTime:times[1],location:room==='-'?'':room,needsReview:true,startRow:row,endRow:row,rawText:original.join('\n')});
+      courses.push({id:uid(),courseName,courseCode,weekday:d.day,startTime:times[0],endTime:times[1],location:room==='-'?'':room,startRow:row,endRow:row,rawText:original.join('\n')});
     });
   }
   if(!courses.length)throw new Error('課表內沒有課程。請確認已完成選課，或手動新增課程。');

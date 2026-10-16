@@ -1,6 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {decodeHTML,loadHTML,parseTimetableHTML} from '../src/html.ts';
+import {buildICS} from '../src/calendar.ts';
 const cell='C1001<br>程式設計<br>A3-101';
 const wrap=(body:string,heading='<td>節次</td><td>星期一</td><td>星期六</td>')=>`<!doctype html><meta charset="UTF-8"><table class="mistab"><tr>${heading}</tr>${body}</table>`;
 const row=(label:string,start:string,end:string,left:string,right='')=>`<tr><td>${label}<br>${start}<br>${end}</td><td>${left}</td><td>${right}</td></tr>`;
@@ -10,7 +11,8 @@ test('HTML reads exact Chinese and codes, merges evening periods, preserves gaps
   assert.equal(result.cellCount,4);assert.equal(result.courses.length,2);
   assert.equal(result.courses[0].courseName,'程式設計');assert.equal(result.courses[0].courseCode,'C1001');
   assert.equal(result.courses[0].startTime,'16:10');assert.equal(result.courses[0].endTime,'19:10');
-  assert.equal(result.courses[1].weekday,6);assert.ok(result.courses.every(c=>c.needsReview));
+  assert.equal(result.courses[1].weekday,6);assert.ok(result.courses.every(c=>!('needsReview' in c)));
+  assert.ok(buildICS(result.courses,{start:'2026-09-07',end:'2027-01-15',reminder:10,name:'課表'}).includes('BEGIN:VEVENT'));
   const gap=parseTimetableHTML(wrap(row('1','09:00','10:00',cell)+row('2','10:10','11:00','')+row('3','11:10','12:00',cell)));
   assert.equal(gap.courses.length,2);
 });
@@ -37,10 +39,10 @@ test('reject missing, empty, ambiguous or malformed timetable instead of inventi
   assert.throws(()=>parseTimetableHTML(wrap(row('1','09:00','10:00',cell))+wrap(row('1','09:00','10:00',cell))),/多張/);
   assert.throws(()=>parseTimetableHTML(wrap(`<tr><td>1<br>09:00<br>10:00</td><td rowspan="999999">${cell}</td><td></td></tr>`)),/合併/);
 });
-test('preserve missing fields for review and literal digits in course codes',()=>{
+test('preserve optional missing fields and literal digits in course codes',()=>{
   const result=parseTimetableHTML(wrap(row('1','09:00','10:00','程式設計')));
   assert.equal(result.courses[0].courseCode,'');assert.equal(result.courses[0].location,'');
-  assert.ok(result.courses[0].needsReview);
+  assert.ok(buildICS(result.courses,{start:'2026-09-07',end:'2027-01-15',reminder:-1,name:'課表'}).includes('BEGIN:VEVENT'));
   const a=parseTimetableHTML(wrap(row('1','09:00','10:00','I1001<br>甲課<br>A3-101')+row('2','10:10','11:00','I1001B<br>甲課<br>A3-101')));
   assert.equal(a.courses.length,2);
 });

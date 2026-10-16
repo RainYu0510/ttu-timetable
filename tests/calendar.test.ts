@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildICS, firstDate, foldLine, validateExport } from '../src/calendar.ts';
 import { mergeCells, conflicts, type Course } from '../src/model.ts';
-const base:Course={id:'course-1',courseName:'演算法',courseCode:'I3400B',weekday:3,startTime:'09:10',endTime:'12:00',location:'A3-105',needsReview:false};
+const base:Course={id:'course-1',courseName:'演算法',courseCode:'I3400B',weekday:3,startTime:'09:10',endTime:'12:00',location:'A3-105'};
 const settings={start:'2026-09-07',end:'2027-01-15',reminder:10,name:'大同大學課表'};
 test('first occurrence handles midweek start, Sunday and year boundary',()=>{
   assert.equal(firstDate('2026-09-07',3),'2026-09-09');
@@ -18,8 +18,7 @@ test('ICS preserves Taipei times, inclusive semester end and notification',()=>{
   assert.ok(text.includes('TRIGGER:-PT10M'));assert.ok(text.endsWith('END:VCALENDAR\r\n'));
   assert.ok(!buildICS([base],{...settings,reminder:-1}).includes('VALARM'));
 });
-test('invalid data and unconfirmed import must block export',()=>{
-  assert.throws(()=>buildICS([{...base,needsReview:true}],settings),/確認/);
+test('invalid course data and dates must block export',()=>{
   assert.throws(()=>buildICS([{...base,endTime:'08:00'}],settings),/晚於/);
   assert.throws(()=>buildICS([base],{...settings,start:'2027-02-30'}),/日期/);
   assert.ok(validateExport([base],{...settings,start:'2026-10-15',end:'2026-10-16'}).some(e=>e.includes('沒有符合')));

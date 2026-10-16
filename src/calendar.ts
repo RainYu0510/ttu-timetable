@@ -20,7 +20,6 @@ export function validateExport(courses: Course[], settings: Settings): string[] 
   courses.forEach(c=>{
     const errs = courseErrors(c);
     if(errs.length) errors.push(`${c.courseName || '未命名課程'}：${errs.join('、')}。`);
-    if(c.needsReview) errors.push(`${c.courseName || '未命名課程'}：請先檢查並確認匯入資料。`);
     if(!errs.length && !errors.some(e=>e.includes('日期'))) {
       if(firstDate(settings.start,c.weekday)>settings.end) errors.push(`${c.courseName}：學期範圍內沒有符合的上課日。`);
     }
