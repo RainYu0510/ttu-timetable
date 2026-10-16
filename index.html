@@ -2,6 +2,12 @@
 <html lang="zh-Hant">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // The account's existing custom domain can receive HTTP redirects from Pages.
+      if (location.protocol === 'http:' && !['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)) {
+        location.replace('https://' + location.host + location.pathname + location.search + location.hash);
+      }
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f7f8f5" />
     <meta name="description" content="大同大學 PDF 課表轉換工具。在你的瀏覽器裡辨識、編輯課表，下載整學期行事曆。" />

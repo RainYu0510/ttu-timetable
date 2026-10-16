@@ -63,7 +63,8 @@ npm run preview
 ## GitHub 與公開網站
 
 - 原始碼：https://github.com/RainYu0510/ttu-timetable
-- GitHub Pages：https://rainyu0510.github.io/ttu-timetable/
+- GitHub Pages 公開網址：https://rainyu.dev/ttu-timetable/
+- GitHub 原生網址：https://rainyu0510.github.io/ttu-timetable/ （沿用帳號既有的 rainyu.dev 自訂網域，會重新導向）
 
 ### 自動部署
 
