@@ -7,7 +7,6 @@ export interface Course {
   endTime: string;
   location: string;
   needsReview: boolean;
-  sourcePage: number;
   startRow?: number;
   endRow?: number;
   rawText?: string;
@@ -35,14 +34,11 @@ export function conflicts(courses: Course[]): Set<string> {
 export function mergeCells(courses: Course[]): Course[] {
   const result: Course[] = [];
   const normalized = (s:string) => s.replace(/\s/g,'');
-  // Comparison only: retain the original recognized values for human review.
-  const codeKey=(s:string)=>normalized(s).toUpperCase().replace(/^[1|\[](?=\d{3,5})/,'I').replace(/^(I\d{4})8$/,'$1B');
-  const roomKey=(s:string)=>s.normalize('NFKC').toUpperCase().match(/[A-Z]\d?-[A-Z]?\d{2,4}/)?.[0]||normalized(s);
   [...courses].sort((a,b) => a.weekday-b.weekday || (a.startRow??0)-(b.startRow??0)).forEach(c => {
     const prev = result.at(-1);
-    const sameCode=prev&&!!c.courseCode&&codeKey(prev.courseCode)===codeKey(c.courseCode);
-    const sameNameWithoutCode=prev&&!prev.courseCode&&!c.courseCode&&normalized(prev.courseName)===normalized(c.courseName);
-    if(prev && prev.weekday===c.weekday && prev.endRow!==undefined && c.startRow===prev.endRow+1 && (sameCode||sameNameWithoutCode) && roomKey(prev.location)===roomKey(c.location) && !!prev.courseName.trim() && validTime(prev.startTime) && validTime(c.endTime)) {
+    const sameCode=prev&&normalized(prev.courseCode)===normalized(c.courseCode);
+    const sameName=prev&&normalized(prev.courseName)===normalized(c.courseName);
+    if(prev && prev.weekday===c.weekday && prev.endRow!==undefined && c.startRow===prev.endRow+1 && sameCode && sameName && normalized(prev.location)===normalized(c.location) && !!prev.courseName.trim() && validTime(prev.startTime) && validTime(c.endTime)) {
       prev.endRow = c.endRow; prev.endTime = c.endTime; prev.needsReview ||= c.needsReview;
       prev.rawText = `${prev.rawText??''}\n${c.rawText??''}`;
       if(prev.courseName!==c.courseName||prev.courseCode!==c.courseCode||prev.location!==c.location)prev.needsReview=true;
@@ -56,7 +52,7 @@ export function courseColor(c: Course) {
   return palette[h%palette.length];
 }
 export function demoCourses(): Course[] {
-  // Fictional data. Never derived from the user's personal PDF.
+  // Fictional data. Never derived from the user's personal timetable.
   return [
     ['程式設計','DEMO01',1,'09:10','12:00','教學大樓 201'],
     ['設計思考','DEMO02',2,'13:10','15:00','創意教室 302'],
@@ -64,5 +60,5 @@ export function demoCourses(): Course[] {
     ['程式設計','DEMO01',4,'13:10','15:00','教學大樓 201'],
     ['大學英文','DEMO04',5,'10:10','12:00','語言教室 102'],
     ['數位攝影','DEMO05',2,'16:10','19:10','攝影教室 101'],
-  ].map(([courseName,courseCode,weekday,startTime,endTime,location]) => ({id:uid(),courseName:String(courseName),courseCode:String(courseCode),weekday:Number(weekday),startTime:String(startTime),endTime:String(endTime),location:String(location),needsReview:false,sourcePage:0}));
+  ].map(([courseName,courseCode,weekday,startTime,endTime,location]) => ({id:uid(),courseName:String(courseName),courseCode:String(courseCode),weekday:Number(weekday),startTime:String(startTime),endTime:String(endTime),location:String(location),needsReview:false}));
 }

@@ -12,7 +12,7 @@ export function firstDate(start: string, weekday: number): string {
 }
 export function validateExport(courses: Course[], settings: Settings): string[] {
   const errors:string[]=[];
-  if(!courses.length) errors.push('請先新增或辨識至少一筆課程。');
+  if(!courses.length) errors.push('請先新增或匯入至少一筆課程。');
   if(!settings.name.trim()) errors.push('請填寫行事曆名稱。');
   try { parseDate(settings.start); parseDate(settings.end); if(settings.end<settings.start) errors.push('學期結束日期不得早於開始日期。'); }
   catch(e) { errors.push((e as Error).message); }
@@ -20,7 +20,7 @@ export function validateExport(courses: Course[], settings: Settings): string[] 
   courses.forEach(c=>{
     const errs = courseErrors(c);
     if(errs.length) errors.push(`${c.courseName || '未命名課程'}：${errs.join('、')}。`);
-    if(c.needsReview) errors.push(`${c.courseName || '未命名課程'}：請先檢查並確認辨識結果。`);
+    if(c.needsReview) errors.push(`${c.courseName || '未命名課程'}：請先檢查並確認匯入資料。`);
     if(!errs.length && !errors.some(e=>e.includes('日期'))) {
       if(firstDate(settings.start,c.weekday)>settings.end) errors.push(`${c.courseName}：學期範圍內沒有符合的上課日。`);
     }

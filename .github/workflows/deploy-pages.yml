@@ -32,7 +32,7 @@ jobs:
         run: npm ci
       - name: Test
         run: npm test
-      - name: Build website and local OCR models
+      - name: Build HTML timetable converter
         run: npm run build
         env:
           VITE_BASE_PATH: ${{ steps.pages.outputs.base_path }}/

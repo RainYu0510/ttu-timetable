@@ -1,18 +1,22 @@
-# 大同課表轉換器
+# 大同課表轉換器｜HTML 轉 ICS
 
-大同大學參考版型 PDF 課表轉 ICS 的互動網頁。React、TypeScript、PDF.js 與 Tesseract.js 實作，無帳號與應用程式後端。
+直接讀取大同大學「本人功課表」另存的 HTML，合併連堂並匯出整學期的 ICS 行事曆。React、TypeScript 與 parse5 實作；檔案只在使用者瀏覽器內處理。
 
-## 啟動
+- 公開網站：https://rainyu.dev/ttu-timetable/
+- GitHub：https://github.com/RainYu0510/ttu-timetable
+- GitHub 原生網址：https://rainyu0510.github.io/ttu-timetable/ （沿用帳號的自訂網域，會重新導向）
 
-需要 Node.js 22.13 以上或相容的新版 Node.js。
+## 本機啟動
 
-```sh
+需要 Node.js 22.13 以上或相容新版。在含有 package.json 的專案資料夾執行：
+
+```powershell
+cd "D:\NCCU_AI_Lecture\Week5\ttu-timetable"
 npm install
-node scripts/prepare-assets.mjs
 npm run dev
 ```
 
-開啟終端機顯示的本機網址。請使用 HTTP 網址，不要直接雙擊 index.html。
+開啟終端機顯示的網址，保持終端機開啟。停止時按 Ctrl + C。本版本不需要準備辨識模型。
 
 ```sh
 npm test
@@ -20,69 +24,65 @@ npm run build
 npm run preview
 ```
 
-## 操作
+## 使用方式
 
-1. 上傳 PDF（20 MB 以下），預設辨識所有非空白頁，也可指定單頁。跨頁課程會合併。
-2. 開始辨識。首次需要載入本機網站提供的中英文模型；依裝置效能可能需要數分鐘。
-3. 點選每筆課程，對照原始 PDF，修正後按「確認並儲存」。可新增、刪除或按指定時間拆分。
-4. 填入實際學期起訖日期及提醒時間。
-5. 下載 ICS，依畫面說明匯入行事曆。建議使用獨立日曆，避免重複匯入造成重複事件。
+1. 登入大同大學選課系統，開啟「本人功課表」。
+2. 在電腦瀏覽器按 Ctrl + S（Mac：⌘ + S），另存為 HTML 網頁。不是列印成 PDF。
+3. 上傳 .html 或 .htm（5 MB 以下），不需要旁邊的 _files 資料夾。
+4. 系統直接讀取表格文字，依星期標題、時間欄與儲存格位置建立課程，合併連堂。
+5. 對照原始資料、修改課程，逐筆儲存或按「確認全部課程」。
+6. 設定學期起訖日期、行事曆名稱及課前提醒。
+7. 下載 ICS，依畫面指引匯入 Google 日曆、Apple 行事曆或 Outlook。
 
-也可使用明確標示的虛構示範資料，或手動建立課表。
+建議先建立專用日曆再匯入，避免重複匯入產生重複事件。也可使用虛構示範課表或手動新增課程。
 
-## 隱私與限制
+## 資料解析與隱私
 
-- 原始 PDF、圖片與辨識文字只在使用者瀏覽器記憶體處理，不送往伺服器。
-- 公開自訂網域可能由代管平台加入載入速度等效能統計；驗收會區分此類統計與文件上傳請求。
-- OCR Worker、WebAssembly 及語言模型由同一網站提供。Google Fonts 僅用來載入字型；封鎖時會使用系統字型。
-- 課表不預設永久保存，重新整理或離開前會提醒未匯出的修改。
-- 目前以大同大學藍色表格課表為參考，尚不支援任意 PDF 版型。
-- 辨識可能有誤，所有辨識課程都必須逐筆確認，不能保證自動辨識準確率。
-- 使用 PDF 上的時間欄辨識上課時間，讀不到時留白，需手動補齊。
-- 不自動排除假日、停課、補課及單雙週課程。
-- 下載 ICS 不等於已同步到行事曆。請實際匯入後核對日期、時間及提醒。
-- 示範資料為虛構，沒有把使用者的個人課表納入網站。
+- 使用 parse5 將 HTML 轉為普通資料樹，不建立可執行的原始網頁。
+- 不執行 HTML 內的 JavaScript，不載入其中的圖片、樣式、iframe 或連結，不使用登入帳密。
+- 原始 HTML 與課程資料不會上傳，也不會預設永久儲存。離開前會提醒未匯出的修改。
+- 預覽由 React 以文字重新呈現，不直接插入使用者 HTML。
+- 支援 UTF-8，以及明確宣告的 Big5 等瀏覽器支援編碼；無法解碼時顯示錯誤。
+- 原始課表的姓名標題、導覽選單與退選按鈕不納入課程或 ICS。
+- 公開自訂網域可能加入載入速度等代管平台統計；驗收會區分統計與文件上傳。Google Fonts 僅載入字型。
+- 示範資料與自動測試資料皆為虛構；個人 HTML、PDF、測試截圖及登入憑證不應提交至儲存庫。
+
+## 支援範圍與限制
+
+- 支援大同大學參考版型的 HTML 表格，包含中午、傍晚、晚間課程。
+- 依實際星期標題定位，支援標準 rowspan / colspan 合併儲存格。
+- 僅合併相鄰、同星期、同代碼、同名稱、同教室的時段；不套用圖片辨識的模糊比對。
+- 不支援 PDF、圖片、登入頁或任意網站。若學校更改版型，可能需要更新解析規則。
+- 缺少課程代碼或教室時保留空白，仍需使用者核對。沒有課程、時間錯誤或多張課表時會提示。
+- 未自動處理國定假日、停課、補課及單雙週課程，請匯入後自行調整。
+- 下載 ICS 不等於已同步行事曆，請在實際日曆中核對日期、時間與提醒。
 
 ## 主要檔案
 
-- `src/main.tsx`：互動介面、課程編輯與操作流程。
-- `src/recognition.ts`：PDF 預覽、格線偵測、逐格 OCR。
-- `src/model.ts`：課程驗證、連堂合併、重疊檢查。
-- `src/calendar.ts`：ICS 產生、時區、每週重複及 UTF-8 換行。
-- `tests/calendar.test.ts`：日期、重複、提醒、文字逃脫及連堂合併測試。
-- `scripts/prepare-assets.mjs`：準備瀏覽器內 OCR 所需的資源。
+- `src/html.ts`：HTML 解碼、表格結構解析、星期與時間讀取。
+- `src/SourcePreview.tsx`：以純文字呈現原始課表資料。
+- `src/main.tsx`：上傳、課程編輯、確認及下載流程。
+- `src/model.ts`：課程資料、嚴格連堂合併、時間重疊檢查。
+- `src/calendar.ts`：ICS、台北時區、每週重複及提醒。
+- `tests/html.test.ts`：HTML 解析、合併儲存格、異常輸入與腳本隔離測試。
+- `tests/calendar.test.ts`：ICS 日期、時間、提醒及文字格式測試。
+- `.github/workflows/deploy-pages.yml`：推送到 main 後自動測試、編譯及部署 GitHub Pages。
 
-## 其他驗證
+## 瀏覽器驗收
 
-`scripts/browser-check.mjs` 使用 Playwright 與已安裝的 Chrome，檢查上傳、真空白頁、編輯、拆分、下載、手機排版及網路請求。需另備 Playwright；可用環境變數 `PLAYWRIGHT_MODULE` 指向既有套件，`TEST_PDF` 指向私人參考 PDF。測試結果寫入已排除版本控制的 `test-output/`，請勿發布個人課表或測試截圖。
+`scripts/browser-check.mjs` 需要另備 Playwright 與已安裝的 Chrome。可透過 `PLAYWRIGHT_MODULE` 指定既有套件，`TEST_URL` 指定測試網址，`TEST_HTML` 指向私人參考 HTML。結果寫入不納入版本控制的 `test-output/`。
 
-圖片文字辨識會保留原始文字，並將常見代碼誤讀與教室破折號差異用於連堂比對；合併後仍須逐筆核對，不將 OCR 猜測當成已確認資料。
+驗收包含示範資料、新增修改刪除、時段拆分、全部確認、學期設定、ICS 下載、手機排版、惡意腳本與外部資源不執行，以及沒有文件上傳或辨識模型請求。
 
-學生作業作品，非大同大學官方服務。
-
-
-## GitHub 與公開網站
-
-- 原始碼：https://github.com/RainYu0510/ttu-timetable
-- GitHub Pages 公開網址：https://rainyu.dev/ttu-timetable/
-- GitHub 原生網址：https://rainyu0510.github.io/ttu-timetable/ （沿用帳號既有的 rainyu.dev 自訂網域，會重新導向）
-
-### 自動部署
-
-推送到 main 分支後，GitHub Actions 會依序安裝套件、執行測試、準備 OCR 引擎與中英文模型、編譯並發布網站。部署狀態可在儲存庫的 Actions 頁查看。Pages 的發布來源設定為 GitHub Actions。
-
-部署時會依 Pages 的 base_path 設定網站路徑，OCR 模型、圖示及程式檔皆可在儲存庫子路徑載入。本機開發仍使用根路徑。
-
-### 更新網站（PowerShell）
+## 更新公開網站
 
 ```powershell
-cd "D:\NCCU_AI_Lecture\Week5\ttu-timetable"
 git status
 git add src public scripts tests index.html package.json package-lock.json tsconfig.json vite.config.mjs README.md .gitignore .github
 git commit -m "Update timetable website"
 git push origin main
 ```
 
-若有新增檔案，先檢查 git status，僅加入預計公開的專案內容。原始個人 PDF、測試輸出、登入憑證及 node_modules 不納入儲存庫；網站建置時自動準備 OCR 資源。
+GitHub Actions 會自動安裝套件、執行測試並發布 dist。Vite 依 Pages 的 base_path 設定子路徑，本機開發仍使用根路徑。
 
-技術參考：[Vite 靜態部署](https://vite.dev/guide/static-deploy.html#github-pages)、[GitHub Pages 自訂工作流程](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)。
+學生作業作品，非大同大學官方服務。
