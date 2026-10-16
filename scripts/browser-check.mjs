@@ -9,7 +9,14 @@ const page=await browser.newPage({viewport:{width:1440,height:1100},acceptDownlo
 const testURL=process.env.TEST_URL||'http://127.0.0.1:5173/';
 const errors=[], requests=[];
 page.on('pageerror',e=>errors.push(e.message));
-page.on('request',r=>{requests.push({url:r.url(),method:r.method(),hasBody:!!r.postData()});});
+const metricFields=new Set(['startTime','pageloadId','eventType','nt','location','versions','bi','memory','firstPaint','firstContentfulPaint','timingsV2','siteToken','st','dt']);
+page.on('request',r=>{
+  let telemetryOnly=false;
+  if(r.method()==='POST'&&new URL(r.url()).origin===new URL(testURL).origin&&new URL(r.url()).pathname==='/cdn-cgi/rum'){
+    try{const data=JSON.parse(r.postData());telemetryOnly=Object.keys(data).every(k=>metricFields.has(k))&&!/courseName|rawText|data:image|data:application\/pdf|%PDF-|JVBERi0|課表\.pdf/.test(JSON.stringify(data));}catch{}
+  }
+  requests.push({url:r.url(),method:r.method(),hasBody:!!r.postData(),telemetryOnly});
+});
 page.on('console',m=>{if(m.type()==='error')console.log('BROWSER_ERROR',m.text());});
 try {
   const res=await page.goto(testURL);assert.equal(res.status(),200);
@@ -74,7 +81,7 @@ try {
   }
   assert.deepEqual(errors,[],'No JavaScript errors');
   const posted=requests.filter(r=>r.method!=='GET'&&r.method!=='HEAD');
-  assert.deepEqual(posted,[],'No file or OCR data is sent over the network');
+  assert.deepEqual(posted.filter(r=>!r.telemetryOnly),[],'No document uploads or unexpected POST requests; only verified hosting metrics are allowed');
   await writeFile('test-output/network.json',JSON.stringify(requests,null,2));
-  console.log('PASS: no JavaScript errors; only GET requests observed.');
+  console.log('PASS: no JavaScript errors or document uploads; only GET and verified hosting metrics observed.');
 } finally {await browser.close();}
