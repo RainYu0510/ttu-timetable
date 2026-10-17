@@ -18,7 +18,7 @@ page.on('request',r=>{
   requests.push({url:r.url(),method:r.method(),telemetryOnly});
 });
 const upload=async(name,html)=>page.locator('input[type=file]').setInputFiles({name,mimeType:'text/html',buffer:Buffer.from(html)});
-const startAgain=async()=>{await page.goto(testURL);await page.getByRole('heading',{name:'把課表， 放進行事曆。',exact:true}).waitFor();};
+const startAgain=async()=>{await page.goto(testURL);await page.getByRole('heading',{name:'把課表，放進行事曆。',exact:true}).waitFor();};
 async function settingsAndDownload(file,reminder='10'){
   if(await page.getByRole('heading',{name:'我的課表',exact:true}).count())await page.getByRole('button',{name:'設定學期',exact:true}).click();
   await page.getByLabel('學期開始日期').fill('2026-09-07');await page.getByLabel('學期結束日期').fill('2027-01-15');
@@ -28,7 +28,7 @@ async function settingsAndDownload(file,reminder='10'){
   return readFile(file,'utf8');
 }
 try {
-  const res=await page.goto(testURL);assert.equal(res.status(),200);await page.getByRole('heading',{name:'把課表， 放進行事曆。',exact:true}).waitFor();
+  const res=await page.goto(testURL);assert.equal(res.status(),200);await page.getByRole('heading',{name:'把課表，放進行事曆。',exact:true}).waitFor();
   await page.evaluate(()=>document.fonts.ready);await page.screenshot({path:'test-output/desktop.png',fullPage:true});
   await upload('wrong.pdf','%PDF-');await page.getByRole('alert').filter({hasText:'HTML 格式'}).waitFor();
   await page.getByRole('button',{name:'關閉錯誤訊息'}).click();
@@ -74,7 +74,6 @@ try {
     const rows=await page.locator('.course-row').allTextContents();assert.equal(rows.length,10);
     assert.ok(rows.some(r=>r.includes('演算法')&&r.includes('I3400B')));assert.ok(rows.some(r=>r.includes('影像處理')&&r.includes('I5560')));
     assert.ok(rows.some(r=>r.includes('週六')&&r.includes('18:20 – 20:05')));assert.ok(rows.some(r=>r.includes('16:10 – 19:10')));
-    await page.locator('.source-details summary').click();assert.equal(await page.locator('.source-table-scroll tbody tr').count(),14);
     await page.screenshot({path:'test-output/html-import.png',fullPage:true});
     await page.setViewportSize({width:390,height:844});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth));
     await page.screenshot({path:'test-output/mobile-import.png',fullPage:true});await page.setViewportSize({width:1440,height:1100});

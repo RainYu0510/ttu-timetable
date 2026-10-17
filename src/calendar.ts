@@ -41,7 +41,7 @@ export function buildICS(courses:Course[],settings:Settings, now=new Date()):str
     'BEGIN:VTIMEZONE','TZID:Asia/Taipei','BEGIN:STANDARD','DTSTART:19700101T000000','TZOFFSETFROM:+0800','TZOFFSETTO:+0800','TZNAME:CST','END:STANDARD','END:VTIMEZONE'];
   courses.forEach(c=>{
     const day=firstDate(settings.start,c.weekday).replace(/-/g,'');
-    lines.push('BEGIN:VEVENT',`UID:${c.id}@ttu-timetable.local`,`DTSTAMP:${stamp}`,`DTSTART;TZID=Asia/Taipei:${day}T${c.startTime.replace(':','')}00`,`DTEND;TZID=Asia/Taipei:${day}T${c.endTime.replace(':','')}00`,`RRULE:FREQ=WEEKLY;BYDAY=${['MO','TU','WE','TH','FR','SA','SU'][c.weekday-1]};UNTIL=${until}`,`SUMMARY:${escapeICS(c.courseName)}`,`LOCATION:${escapeICS(c.location)}`,`DESCRIPTION:${escapeICS(c.courseCode ? '課程代碼：'+c.courseCode : '由大同課表轉換器建立')}`);
+    lines.push('BEGIN:VEVENT',`UID:${c.id}@ttu-timetable.local`,`DTSTAMP:${stamp}`,`DTSTART;TZID=Asia/Taipei:${day}T${c.startTime.replace(':','')}00`,`DTEND;TZID=Asia/Taipei:${day}T${c.endTime.replace(':','')}00`,`RRULE:FREQ=WEEKLY;BYDAY=${['MO','TU','WE','TH','FR','SA','SU'][c.weekday-1]};UNTIL=${until}`,`SUMMARY:${escapeICS(c.courseName)}`,`LOCATION:${escapeICS(c.location)}`,`DESCRIPTION:${escapeICS(c.courseCode ? '課程代碼：'+c.courseCode : '由大同課表轉換平台建立')}`);
     if(settings.reminder>=0) lines.push('BEGIN:VALARM',`TRIGGER:-PT${settings.reminder}M`,'ACTION:DISPLAY',`DESCRIPTION:${escapeICS('上課提醒：'+c.courseName)}`,'END:VALARM');
     lines.push('END:VEVENT');
   });

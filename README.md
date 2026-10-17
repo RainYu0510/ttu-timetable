@@ -1,4 +1,4 @@
-# 大同課表轉換器｜HTML 轉 ICS
+# 大同課表轉換平台｜HTML 轉 ICS
 
 直接讀取大同大學「本人功課表」另存的 HTML，合併連堂並匯出整學期的 ICS 行事曆。React、TypeScript 與 parse5 實作；檔案只在使用者瀏覽器內處理。
 

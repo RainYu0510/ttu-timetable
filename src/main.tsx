@@ -1,11 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ArrowRight, ArrowLeft, ArrowUpRight, CalendarDays, Check, CheckCheck, ChevronDown, Clock3, Download, FileCheck2, HelpCircle, LayoutGrid, List, LoaderCircle, LockKeyhole, Plus, ShieldCheck, Sparkles, Upload, X, Pencil, Trash2, Scissors, AlertTriangle, GraduationCap } from 'lucide-react';
+import { ArrowRight, ArrowLeft, ArrowUpRight, CalendarDays, Check, ChevronDown, Clock3, Download, FileCheck2, HelpCircle, LayoutGrid, List, LoaderCircle, Plus, ShieldCheck, X, Pencil, Trash2, Scissors, AlertTriangle } from 'lucide-react';
 import { courseColor, courseErrors, conflicts, demoCourses, timeMinutes, uid, weekdays, type Course, type Settings } from './model';
 import { buildICS, validateExport } from './calendar';
 import { loadHTML, type HTMLTimetable } from './html';
 import { SourcePreview } from './SourcePreview';
+import { HomeHero } from './HomeHero';
 import './styles.css';
+import './editorial.css';
 
 function App() {
   const [step,setStep]=useState(0), [courses,setCourses]=useState<Course[]>([]), [htmlSource,setHTMLSource]=useState<HTMLTimetable|null>(null);
@@ -17,8 +19,9 @@ function App() {
   const input=useRef<HTMLInputElement>(null), main=useRef<HTMLElement>(null);
   const overlap=conflicts(courses);
   const activeStep=step===1?2:step;
+  useEffect(()=>{if(help){document.getElementById('guide-heading')?.focus();window.scrollTo({top:0,behavior:'instant'});}},[help]);
   useEffect(()=>{const guard=(e:BeforeUnloadEvent)=>{if(dirty){e.preventDefault();e.returnValue='';}};window.addEventListener('beforeunload',guard);return()=>window.removeEventListener('beforeunload',guard);},[dirty]);
-  const go=(n:number)=>{setStep(n);setError('');main.current?.scrollIntoView({behavior:'smooth',block:'start'});};
+  const go=(n:number)=>{setHelp(false);setStep(n);setError('');main.current?.scrollIntoView({behavior:'smooth',block:'start'});};
   const canReplace=()=> !dirty || window.confirm('目前的課表及修改會被取代，確定要繼續嗎？');
   async function upload(file?:File) {
     if(!file || busy || !canReplace())return;
@@ -40,45 +43,51 @@ function App() {
   }
   const changeStep=(n:number)=>{if(busy)return;if(n===0||courses.length&&n<3||n===3&&downloaded)go(n);};
   return <>
-    <header className="topbar"><div className="nav-inner"><a href="#" className="brand" onClick={e=>{e.preventDefault();if(!busy)go(0);}}><span className="brand-icon"><img src={`${import.meta.env.BASE_URL}tatung-rice-cooker.png`} alt="" aria-hidden="true"/></span><span>大同課表轉換器<small>TTU TIMETABLE</small></span></a><nav><button className="help-button" onClick={()=>setHelp(true)}><HelpCircle size={17}/> 使用說明</button><span className="project-badge">學生作品</span></nav></div></header>
-    <div className="page-shell">
-      <section className={step===0?'hero':'hero hero-compact'} aria-labelledby="hero-heading">
-        <div className="hero-intro">
-          <div><div className="eyebrow">大同大學 · HTML 轉 ICS</div><h1 id="hero-heading" className="hero-title">把課表，<br/>放進行事曆。</h1></div>
-          <div className="hero-copy"><p>上傳課表 HTML，設定學期日期，<br/>下載整學期的行事曆。</p><div className="hero-chips"><span><LockKeyhole size={15}/> 本機處理</span><span><CheckCheck size={16}/> 免費・免登入</span></div><button className="hero-action" onClick={()=>main.current?.scrollIntoView({behavior:'smooth',block:'start'})}>開始轉換 <ArrowRight size={17}/></button></div>
-        </div>
-        <div className="hero-cards">
-          <div className="hero-note"><h3>每週課程，<br/>一次匯入。</h3><p>Google、Apple、Outlook<br/>支援標準 ICS 行事曆。</p><span>TTU TIMETABLE <ArrowUpRight size={17}/></span></div>
-          <div className="hero-sample"><div><span><CalendarDays size={17}/> 每週課表</span><small>示範資料</small></div><ul><li><time>09:10</time><span>程式設計</span></li><li><time>13:10</time><span>設計思考</span></li><li><time>16:10</time><span>數位攝影</span></li></ul></div>
-          <div className="hero-landscape" aria-hidden="true"><svg viewBox="0 0 400 240" preserveAspectRatio="xMidYMid slice"><rect width="400" height="240" fill="#edf1e5"/><circle cx="305" cy="68" r="39" fill="#f7e5c6"/><circle cx="305" cy="68" r="26" fill="#efbb80"/><path d="M0 158 Q110 130 210 150 T400 140 V240 H0Z" fill="#abd5b2"/><path d="M0 192 Q130 164 235 183 T400 172 V240 H0Z" fill="#58ad89"/><path d="M0 220 Q150 197 270 214 T400 202 V240 H0Z" fill="#087663"/><g fill="#075047"><path d="M74 212v-27h3v27zM65 196l10-23 10 23zM116 207v-20h3v20zM109 195l9-20 9 20zM321 204v-27h3v27zM313 187l10-24 10 24z"/></g></svg></div>
-        </div>
-      </section>
+    <header className="topbar"><div className="nav-inner"><a href="#" className="brand" onClick={e=>{e.preventDefault();if(!busy)go(0);}}><span className="brand-icon" aria-hidden="true"><img src={`${import.meta.env.BASE_URL}tatung-rice-cooker.png`} alt=""/></span><span>大同課表轉換平台<small>TTU TIMETABLE</small></span></a><nav><button className="help-button" aria-current={help?'page':undefined} onClick={()=>setHelp(true)}><HelpCircle size={17}/> 使用說明</button><a className="project-badge" href="https://rainyu.dev" target="_blank" rel="noreferrer">rainyu.dev <ArrowUpRight size={15}/></a></nav></div></header>
+    <div className={step===0&&!help?'page-shell home-page':'page-shell'}>
       <main ref={main} id="workspace">
-        <ol className="steps" aria-label="轉換進度">{[{label:'上傳課表',value:0},{label:'設定學期',value:2},{label:'下載行事曆',value:3}].map((s,i)=><li key={s.value} className={activeStep===s.value?'current':activeStep>s.value?'completed':''}><button onClick={()=>changeStep(s.value)} disabled={busy||s.value>0&&!courses.length||s.value===3&&!downloaded} aria-current={activeStep===s.value?'step':undefined}><span className="step-num">{activeStep>s.value?<Check size={15}/>:String(i+1).padStart(2,'0')}</span><span>{s.label}</span></button>{i<2&&<span className="step-line"/>}</li>)}</ol>
+        {help?<HelpPage onBack={()=>setHelp(false)}/>:<>
+        {step!==0&&<ol className="steps" aria-label="轉換進度">{[{label:'上傳課表',value:0},{label:'設定學期',value:2},{label:'下載行事曆',value:3}].map((s,i)=><li key={s.value} className={activeStep===s.value?'current':activeStep>s.value?'completed':''}><button onClick={()=>changeStep(s.value)} disabled={busy||s.value>0&&!courses.length||s.value===3&&!downloaded} aria-current={activeStep===s.value?'step':undefined}><span className="step-num">{activeStep>s.value?<Check size={15}/>:String(i+1).padStart(2,'0')}</span><span>{s.label}</span></button>{i<2&&<span className="step-line"/>}</li>)}</ol>}
         {error&&<div className="error-banner" role="alert"><AlertTriangle size={19}/><div>{error.split('\n').map((s,i)=><p key={i}>{s}</p>)}</div><button aria-label="關閉錯誤訊息" onClick={()=>setError('')}><X size={17}/></button></div>}
-        {step===0&&<div className="upload-layout"><section className="panel upload-panel"><div className="panel-heading"><div><h2>上傳課表</h2><p>支援大同大學「本人功課表」HTML。</p></div><span className="number-watermark">01</span></div>
-          <button className={'dropzone '+(dragging?'dragging':'')} disabled={busy} onClick={()=>input.current?.click()} onDragOver={e=>{e.preventDefault();setDragging(true);}} onDragLeave={()=>setDragging(false)} onDrop={e=>{e.preventDefault();setDragging(false);void upload(e.dataTransfer.files[0]);}}><span className="upload-icon"><Upload size={28}/></span><strong>將課表 HTML 拖曳到這裡</strong><span>或點擊選擇檔案</span><small>支援 .html / .htm，檔案大小上限 5 MB</small></button>
-          <div className="upload-bottom"><span><ShieldCheck size={16}/> 檔案僅在瀏覽器處理</span><button className="text-button" onClick={demo} disabled={busy}>先用示範課表試試 <ArrowUpRight size={15}/></button></div>
-          <details className="save-html-guide"><summary>如何取得 HTML 課表？ <ChevronDown size={14}/></summary><ol><li>登入大同大學選課系統，開啟「本人功課表」。</li><li>在電腦瀏覽器按 Ctrl + S（Mac 按 ⌘ + S），另存網頁為 HTML。</li><li>上傳 .html 檔案即可，不需要一起上傳 _files 資料夾。</li></ol><p>請使用另存網頁，不是「列印成 PDF」。</p></details>
-          {busy&&<ProgressBar progress={progress} status={status}/>}
-        </section><aside className="upload-aside"><div className="note-card"><span className="mini-icon"><Sparkles size={21}/></span><h3>自動整理，<br/>自由修改。</h3><div className="feature-list"><span><FileCheck2 size={17}/><span>讀取課程並合併連堂</span></span><span><Pencil size={17}/><span>可新增、修改與拆分</span></span><span><CalendarDays size={17}/><span>匯出每週重複事件</span></span></div><div className="calendar-brands">Google 日曆 <i/> Apple 行事曆 <i/> Outlook</div></div><button className="manual-link" disabled={busy} onClick={()=>{go(1);addCourse();}}>手動建立課表 <ArrowRight size={14}/></button></aside></div>}
+        {step===0&&<><HomeHero busy={busy} dragging={dragging} onUpload={()=>input.current?.click()} onFile={file=>void upload(file)} onDragChange={setDragging} onDemo={demo} onManual={()=>{go(1);addCourse();}}/>{busy&&<ProgressBar progress={progress} status={status}/>}</>}
 
         {step===1&&<section className="panel editor-panel"><div className="editor-title"><div><h2>我的課表</h2><p>{isDemo?'虛構示範資料，可自由編輯。':'點選課程即可修改。'}</p></div><div className="editor-actions"><button className="button secondary" onClick={addCourse}><Plus size={17}/> 新增課程</button></div></div><div className="editor-toolbar"><div className="count-tags"><span>{courses.length} 個上課時段</span>{overlap.size>0&&<span className="warn-tag">{overlap.size} 筆時間重疊</span>}{isDemo&&<span className="demo-tag">示範資料</span>}</div><div className="view-switch"><button aria-label="每週課表" aria-pressed={view==='week'} className={view==='week'?'active':''} onClick={()=>setView('week')}><LayoutGrid size={15}/> 每週</button><button aria-label="課程清單" aria-pressed={view==='list'} className={view==='list'?'active':''} onClick={()=>setView('list')}><List size={16}/> 清單</button></div></div>
           {htmlSource&&<SourcePreview source={htmlSource} fileName={fileName} onReplace={()=>input.current?.click()}/>}
           <div className="editor-body">
             <div className="result-area">{!courses.length?<div className="empty-state"><CalendarDays size={36}/><h3>還沒有課程</h3><p>上傳 HTML 讀取，或手動新增第一堂課。</p><button className="button secondary" onClick={addCourse}><Plus size={16}/> 新增課程</button></div>:view==='week'?<WeekGrid courses={courses} onEdit={setEditing} overlaps={overlap}/>:<div className="course-list">{[...courses].sort((a,b)=>a.weekday-b.weekday||a.startTime.localeCompare(b.startTime)).map(c=><button key={c.id} className={'course-row '+courseColor(c)} onClick={()=>setEditing(c)}><span className="course-stripe"/><span className="course-row-day">週{weekdays[c.weekday-1]}<small>{c.startTime||'未設定'} – {c.endTime||'未設定'}</small></span><span className="course-row-main"><strong>{c.courseName||'未命名課程'}</strong><small>{c.courseCode} {c.location&&'· '+c.location}</small></span>{overlap.has(c.id)&&<span className="warn-tag">時間重疊</span>}<Pencil size={15}/></button>)}</div>}</div>
-          </div><div className="panel-footer"><button className="text-button" onClick={()=>go(0)}><ArrowLeft size={16}/> 返回上傳</button><span className="footer-hint">離開前請匯出課表。</span><button className="button primary" disabled={!courses.length} onClick={()=>{const invalid=courses.filter(c=>courseErrors(c).length);if(invalid.length){setError('課程資料不完整，請點選課程補齊名稱、星期及時間。');return;}go(2);}}>設定學期 <ArrowRight size={17}/></button></div>
+          </div><div className="panel-footer"><button className="text-button" onClick={()=>go(0)}><ArrowLeft size={16}/> 返回上傳</button><button className="button primary" disabled={!courses.length} onClick={()=>{const invalid=courses.filter(c=>courseErrors(c).length);if(invalid.length){setError('課程資料不完整，請點選課程補齊名稱、星期及時間。');return;}go(2);}}>設定學期 <ArrowRight size={17}/></button></div>
         </section>}
         {step===2&&<div className="settings-layout"><section className="panel settings-panel"><h2>設定學期</h2><p className="muted">設定日期與課前提醒。</p><div className="form-fields"><label>行事曆名稱<input value={settings.name} maxLength={100} onChange={e=>updateSettings({name:e.target.value})}/></label><div className="two-col"><label>學期開始日期<input type="date" value={settings.start} onChange={e=>updateSettings({start:e.target.value})}/></label><label>學期結束日期<input type="date" value={settings.end} min={settings.start} onChange={e=>updateSettings({end:e.target.value})}/></label></div><div className="two-col"><label>課前提醒<select value={settings.reminder} onChange={e=>updateSettings({reminder:Number(e.target.value)})}><option value={-1}>不提醒</option>{[5,10,15,30].map(n=><option key={n} value={n}>上課前 {n} 分鐘</option>)}</select></label><label>時區<div className="readonly-field"><Clock3 size={16}/> 台北（UTC+08:00）</div></label></div></div><div className="notice"><AlertTriangle size={19}/><p>假日、停課及補課需匯入後自行調整。</p></div><div className="panel-footer"><button className="text-button" onClick={()=>go(0)}><ArrowLeft size={16}/> 重新上傳</button><button className="button primary" onClick={exportCalendar}><Download size={17}/> 下載行事曆</button></div></section><aside className="export-summary"><div className="summary-icon"><CalendarDays size={29}/></div><h3>課表摘要</h3><div className="summary-number">{courses.length}<span>個每週上課時段</span></div><p>{new Set(courses.map(c=>c.courseCode||c.courseName)).size} 門課程 · Asia/Taipei</p><hr/><div><Check size={16}/> 已自動匯入課程</div><button className="button secondary full" onClick={()=>go(1)}><Pencil size={15}/> 查看／修改課表</button><div><Check size={16}/> 自動設定每週重複</div><div><ShieldCheck size={16}/> 在你的裝置產生檔案</div>{isDemo&&<p className="warn-tag">目前使用示範資料</p>}</aside></div>}
-        {step===3&&<section className="panel done-panel"><div className="done-check"><Check size={35}/></div><h2>行事曆已下載</h2><p>將 ICS 檔案匯入你的行事曆。</p><div className="download-file"><FileCheck2 size={29}/><div><strong>{settings.name}.ics</strong><small>{courses.length} 個每週時段 · {settings.start} 至 {settings.end}</small></div><button className="button secondary" onClick={exportCalendar}><Download size={16}/> 再次下載</button></div><div className="import-guides"><h3>匯入方式</h3><details open><summary>Google 日曆 <ChevronDown size={16}/></summary><p>在電腦版 Google 日曆開啟「設定」→「匯入及匯出」→ 選擇剛下載的 .ics 檔案及目標日曆 →「匯入」。</p></details><details><summary>Apple 行事曆 <ChevronDown size={16}/></summary><p>在 Mac 開啟下載的 .ics 檔案，依行事曆提示選擇要加入的日曆；其他裝置依系統提供的開啟及加入功能操作。</p></details><details><summary>Outlook <ChevronDown size={16}/></summary><p>在 Outlook 行事曆的「新增行事曆」中選擇「從檔案上傳」或「匯入」，選取 .ics 檔案後依畫面操作。</p></details><p className="import-warning">建議匯入專用日曆，避免重複匯入，並核對日期與時間。</p></div><button className="text-button" onClick={()=>go(1)}><ArrowLeft size={16}/> 返回修改課表</button></section>}
+        {step===3&&<section className="panel done-panel"><div className="done-check"><Check size={35}/></div><h2>行事曆已下載</h2><p>將 ICS 檔案匯入你的行事曆。</p><div className="download-file"><FileCheck2 size={29}/><div><strong>{settings.name}.ics</strong><small>{courses.length} 個每週時段 · {settings.start} 至 {settings.end}</small></div><button className="button secondary" onClick={exportCalendar}><Download size={16}/> 再次下載</button></div><button className="text-button download-help" onClick={()=>setHelp(true)}>查看匯入方式 <ArrowUpRight size={15}/></button><button className="text-button" onClick={()=>go(1)}><ArrowLeft size={16}/> 返回修改課表</button></section>}
+        </>}
       </main>
       <input ref={input} type="file" accept="text/html,.html,.htm" hidden onChange={e=>void upload(e.target.files?.[0])}/>
-      <section className="trust-strip"><span><ShieldCheck size={21}/><span><strong>課表不會上傳</strong><small>HTML 與課程內容不會上傳</small></span></span><span><CalendarDays size={21}/><span><strong>標準 ICS 格式</strong><small>支援 Google、Apple、Outlook</small></span></span><span><GraduationCap size={23}/><span><strong>大同課表專用</strong><small>讀取「本人功課表」HTML</small></span></span></section>
-      <footer><span>大同課表轉換器 <span className="footer-divider">/</span> TTU TIMETABLE</span><span>學生作業作品 · 非大同大學官方服務</span></footer>
+
     </div>
+    <footer className="site-footer"><div className="footer-inner"><span>大同課表轉換平台 <span className="footer-divider">/</span> TTU TIMETABLE</span><span>made by 肉鬆</span></div></footer>
     {editing&&<CourseModal course={editing} exists={courses.some(c=>c.id===editing.id)} onClose={()=>setEditing(null)} onSave={saveCourse} onDelete={()=>{if(window.confirm('確定刪除這個上課時段？')){setCourses(c=>c.filter(x=>x.id!==editing.id));setEditing(null);setDirty(true);setDownloaded(false);}}} onSplit={(c,at)=>{const left={...c,endTime:at,endRow:undefined};const right={...c,id:uid(),startTime:at,startRow:undefined};setCourses(prev=>[...prev.filter(x=>x.id!==c.id),left,right]);setEditing(null);setDirty(true);setDownloaded(false);}}/>}
-    {help&&<Modal title="使用說明" onClose={()=>setHelp(false)}><div className="help-content"><p>這是在瀏覽器中運作的大同大學 HTML 課表轉 ICS 工具。</p><ol><li><strong>另存 HTML：</strong>登入學校選課系統，開啟「本人功課表」，按 Ctrl + S（Mac：⌘ + S）另存 HTML 網頁。</li><li><strong>上傳 HTML：</strong>選取 .html 或 .htm，不需要 _files 資料夾。可點「查看／修改課表」調整課程。</li><li><strong>設定學期：</strong>填寫實際起訖日期及課前提醒。</li><li><strong>下載與匯入：</strong>下載 ICS，匯入 Google、Apple 或 Outlook 行事曆。</li></ol><div className="notice"><ShieldCheck size={20}/><p>HTML 只當作資料解析，不執行原網頁腳本、不載入圖片或連結，檔案內容不會上傳。課表不會自動永久保存。</p></div><p>支援大同大學個人課表表格，未支援任意網頁、登入頁、PDF 或圖片。假日、補課及單雙週課程需自行調整。</p></div><button className="button primary full" onClick={()=>setHelp(false)}>開始使用 <ArrowRight size={17}/></button></Modal>}
+
   </>;
+}
+function HelpPage({onBack}:{onBack:()=>void}) {
+  return <section className="guide-page" aria-labelledby="guide-heading">
+    <div className="guide-heading"><div><div className="eyebrow">HTML → ICS</div><h1 id="guide-heading" tabIndex={-1}>使用說明</h1></div><button className="button primary" onClick={onBack}>開始使用 <ArrowRight size={17}/></button></div>
+    <div className="guide-grid">
+      <section className="panel guide-section"><h2>轉換課表</h2><ol className="guide-steps">
+        <li><strong>另存 HTML</strong><p>登入大同大學校務資訊系統，進入選課系統，開啟「本人功課表」。按滑鼠右鍵選擇「另存新檔」，存檔類型選擇「僅限網頁的 HTML 部分」。</p></li>
+        <li><strong>上傳課表</strong><p>選擇 .html 或 .htm，檔案上限 5 MB。</p></li>
+        <li><strong>設定學期</strong><p>填寫起訖日期與提醒；可透過「查看／修改課表」調整課程。</p></li>
+        <li><strong>下載並匯入</strong><p>下載 ICS，加入 Google、Apple 或 Outlook 行事曆。</p></li>
+      </ol></section>
+      <section className="panel guide-section"><h2>常見問題</h2>
+        <details open><summary>課表會上傳嗎？ <ChevronDown size={16}/></summary><p>不會。HTML 在瀏覽器解析，不執行原網頁腳本，也不載入其中的外部資源。課表不會永久保存，離開前請匯出。</p></details>
+        <details><summary>支援哪些檔案？ <ChevronDown size={16}/></summary><p>支援大同大學「本人功課表」HTML，會自動合併連堂。不支援 PDF、圖片或任意網站，也可手動建立課表。</p></details>
+        <details><summary>會自動處理假日嗎？ <ChevronDown size={16}/></summary><p>課程按週重複。假日、停課、補課及單雙週課程需匯入後自行調整，並核對日期、時間與提醒。</p></details>
+        <p className="guide-note">非大同大學官方服務。</p>
+      </section>
+    </div>
+    <section className="panel guide-section guide-import"><div className="import-guides"><h3>匯入方式</h3><details open><summary>Google 日曆 <ChevronDown size={16}/></summary><p>在電腦版 Google 日曆開啟「設定」→「匯入及匯出」→ 選擇剛下載的 .ics 檔案及目標日曆 →「匯入」。</p></details><details><summary>Apple 行事曆 <ChevronDown size={16}/></summary><p>在 Mac 開啟下載的 .ics 檔案，依行事曆提示選擇要加入的日曆；其他裝置依系統提供的開啟及加入功能操作。</p></details><details><summary>Outlook <ChevronDown size={16}/></summary><p>在 Outlook 行事曆的「新增行事曆」中選擇「從檔案上傳」或「匯入」，選取 .ics 檔案後依畫面操作。</p></details><p className="import-warning">建議匯入專用日曆，避免重複匯入，並核對日期與時間。</p></div></section>
+  </section>;
 }
 function ProgressBar({progress,status}:{progress:number;status:string}) {return <div className="progress-box" aria-live="polite"><div><LoaderCircle className="spin" size={17}/><span>{status}</span></div><progress max={100} value={progress}/></div>;}
 
