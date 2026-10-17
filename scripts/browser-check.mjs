@@ -18,24 +18,24 @@ page.on('request',r=>{
   requests.push({url:r.url(),method:r.method(),telemetryOnly});
 });
 const upload=async(name,html)=>page.locator('input[type=file]').setInputFiles({name,mimeType:'text/html',buffer:Buffer.from(html)});
-const startAgain=async()=>{await page.goto(testURL);await page.getByRole('heading',{name:'課表 HTML 轉行事曆',exact:true}).waitFor();};
+const startAgain=async()=>{await page.goto(testURL);await page.getByRole('heading',{name:'把課表， 放進行事曆。',exact:true}).waitFor();};
 async function settingsAndDownload(file,reminder='10'){
   if(await page.getByRole('heading',{name:'我的課表',exact:true}).count())await page.getByRole('button',{name:'設定學期',exact:true}).click();
   await page.getByLabel('學期開始日期').fill('2026-09-07');await page.getByLabel('學期結束日期').fill('2027-01-15');
   await page.getByLabel('課前提醒').selectOption(reminder);
   const pending=page.waitForEvent('download');await page.getByRole('button',{name:'下載行事曆',exact:true}).click();
-  const dl=await pending;await dl.saveAs(file);await page.getByRole('heading',{name:'課表就位，出發吧！'}).waitFor();
+  const dl=await pending;await dl.saveAs(file);await page.getByRole('heading',{name:'行事曆已下載'}).waitFor();
   return readFile(file,'utf8');
 }
 try {
-  const res=await page.goto(testURL);assert.equal(res.status(),200);await page.getByRole('heading',{name:'課表 HTML 轉行事曆',exact:true}).waitFor();
+  const res=await page.goto(testURL);assert.equal(res.status(),200);await page.getByRole('heading',{name:'把課表， 放進行事曆。',exact:true}).waitFor();
   await page.evaluate(()=>document.fonts.ready);await page.screenshot({path:'test-output/desktop.png',fullPage:true});
   await upload('wrong.pdf','%PDF-');await page.getByRole('alert').filter({hasText:'HTML 格式'}).waitFor();
   await page.getByRole('button',{name:'關閉錯誤訊息'}).click();
   await upload('login.html','<h1>請登入</h1>');await page.getByRole('alert').filter({hasText:'找不到課表'}).waitFor();
   await page.getByRole('button',{name:'關閉錯誤訊息'}).click();
   const hostile=`<script>window.__HTML_EXECUTED=true</script><img src="https://html-resource.invalid/photo.png" onerror="window.__HTML_EXECUTED=true"><iframe src="https://html-resource.invalid/frame"></iframe><link rel="stylesheet" href="https://html-resource.invalid/style.css"><table><tr><td>節次</td><td>星期六</td><td>星期一</td></tr><tr><td>第十節<br>19:15<br>20:05</td><td>C1001<br>範例課程<br>A3-101<script>bad()</script></td><td></td></tr></table>`;
-  await upload('safe-test.htm',hostile);await page.getByRole('heading',{name:'為這學期，畫好時間線。'}).waitFor();
+  await upload('safe-test.htm',hostile);await page.getByRole('heading',{name:'設定學期',exact:true}).waitFor();
   assert.equal(await page.getByText(/待確認|確認全部課程/).count(),0);
   assert.equal(await page.locator('.steps li').count(),3);
   const direct=await settingsAndDownload('test-output/direct.ics');assert.ok(direct.includes('SUMMARY:範例課程'));
@@ -45,8 +45,8 @@ try {
   assert.ok((await page.locator('.course-row').innerText()).includes('週六'));
   assert.equal(await page.evaluate(()=>window.__HTML_EXECUTED),undefined);
   assert.ok(!requests.some(r=>r.url.includes('html-resource.invalid')),'Saved HTML must not fetch any external resources');
-  await page.getByRole('button',{name:/上傳課表/}).click();
-  await page.getByRole('button',{name:'使用說明'}).click();await page.getByRole('button',{name:'了解，開始安排'}).click();
+  await page.getByRole('button',{name:'上傳課表',exact:true}).click();
+  await page.getByRole('button',{name:'使用說明'}).click();await page.getByRole('button',{name:'開始使用'}).click();
   await page.getByRole('button',{name:'先用示範課表試試'}).click();await page.getByRole('button',{name:'查看／修改課表',exact:true}).click();
   await page.getByRole('button',{name:'課程清單',exact:true}).click();assert.equal(await page.locator('.course-row').count(),6);
   await page.getByRole('button',{name:'新增課程',exact:true}).click();
@@ -65,7 +65,7 @@ try {
   console.log('PASS: invalid files, inert HTML scripts/resources, weekday headers, direct export without review, demo, CRUD, split, ICS and mobile layout.');
   if(process.env.TEST_HTML){
     await page.setViewportSize({width:1440,height:1100});await startAgain();await page.locator('input[type=file]').setInputFiles(process.env.TEST_HTML);
-    await page.getByRole('heading',{name:'為這學期，畫好時間線。'}).waitFor();
+    await page.getByRole('heading',{name:'設定學期',exact:true}).waitFor();
     assert.equal(await page.getByText(/待確認|確認全部課程/).count(),0);
     await page.screenshot({path:'test-output/direct-settings.png',fullPage:true});
     const quick=await settingsAndDownload('test-output/quick-imported.ics','15');assert.equal(quick.split('BEGIN:VEVENT').length-1,10);
